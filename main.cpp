@@ -29,49 +29,18 @@ int main() {
     const auto window = window_preset();
 
     // load vertex and fragment shader source code
-    const auto vertex_shader_source = load_shader_source("../shaders/vertex.glsl");
-    const auto fragment_shader_source = load_shader_source("../shaders/fragment.glsl");
+    const auto vertexShader = load_compile_shader("../shaders/vertex.glsl", GL_VERTEX_SHADER);
+    check_error(vertexShader, GL_COMPILE_STATUS, "ERROR::SHADER::VERTEX::COMPILATION_FAILED");
 
-    // Create and compile vertex shader
-    const auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    const auto *vertexSourcePtr = vertex_shader_source.c_str();
-    glShaderSource(vertexShader, 1, &vertexSourcePtr, nullptr);
-    glCompileShader(vertexShader);
-
-    // Check shader compilation
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Create and compile fragment shader
-    const auto *fragmentSourcePtr = fragment_shader_source.c_str();
-    const auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSourcePtr, nullptr);
-    glCompileShader(fragmentShader);
-
-    // Check shader compilation
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
+    const auto fragmentShader = load_compile_shader("../shaders/fragment.glsl",GL_FRAGMENT_SHADER);
+    check_error(fragmentShader, GL_COMPILE_STATUS, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
 
     // Link shaders into a program
     const auto shader = glCreateProgram();
     glAttachShader(shader, vertexShader);
     glAttachShader(shader, fragmentShader);
     glLinkProgram(shader);
-
-    // Check program linking
-    glGetProgramiv(shader, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
+    check_error(shader, GL_LINK_STATUS, "ERROR::SHADER::PROGRAM::LINKING_FAILED", PROGRAM);
 
     // Delete shaders as they're linked now
     glDeleteShader(vertexShader);
@@ -112,7 +81,8 @@ int main() {
         // Update time for animation
         auto currentTime = static_cast<float>(glfwGetTime());
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black background for better flame effect
+        // Black background for better flame effect
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader);
@@ -131,11 +101,12 @@ int main() {
 
         // Draw filled square with flame effect
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        // Indicate we are drawing the filled square
         glUniform1i(glGetUniformLocation(shader, "isBorder"), 0);
+        // Draw the square using the EBO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glBindVertexArray(0);
-
         glfwSwapBuffers(window);
     }
 

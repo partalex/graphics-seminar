@@ -1,7 +1,3 @@
-//
-// Created by avasilic on 9/30/2025.
-//
-
 #ifndef UTIL_H
 #define UTIL_H
 
@@ -25,6 +21,29 @@ static double dragCenterX = 0, dragCenterY = 0;
 static bool dragging = false;
 static double aspect = 1.0;
 
+enum ShaderOrProgram {
+    SHADER,
+    PROGRAM
+};
+
+inline void check_error(const GLuint shader, const GLsizei status, const string &message,
+                        const ShaderOrProgram mode = SHADER) {
+    int success;
+    char infoLog[512];
+    switch (mode) {
+        case SHADER:
+            glGetShaderiv(shader, status, &success);
+            break;
+        case PROGRAM:
+            glGetProgramiv(shader, status, &success);
+            break;
+    }
+    if (!success) {
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        cerr << message << infoLog << "\n" << endl;
+        exit(EXIT_FAILURE);
+    }
+}
 
 inline GLFWwindow *window_preset() {
     // Initialize GLFW
@@ -70,7 +89,7 @@ inline string load_shader_source(const char *filePath) {
     const ifstream file(filePath, ios::in | ios::binary);
     if (!file) {
         cerr << "Failed to open shader file: " << filePath << endl;
-        return "";
+        exit(EXIT_FAILURE);
     }
     ostringstream contents;
     contents << file.rdbuf();
@@ -78,4 +97,16 @@ inline string load_shader_source(const char *filePath) {
 }
 
 
-#endif //UTIL_H
+inline GLuint load_compile_shader(const char *filePath, const GLenum shader_type) {
+    const auto source = load_shader_source(filePath);
+
+    // Compile shader
+    const char *sourcePtr = source.c_str();
+    const auto shader = glCreateShader(shader_type);
+    glShaderSource(shader, 1, &sourcePtr, nullptr);
+    glCompileShader(shader);
+    return shader;
+}
+
+
+#endif

@@ -1,8 +1,12 @@
 #version 410 core
 
+// aPos is expected to be in the range [-1, 1] for both x and y
 layout (location = 0) in vec2 aPos;
+// center is the position to center the flame
 uniform vec2 center;
+// scale is the size of the flame
 uniform float scale;
+// time is used for animation
 uniform float time;
 
 void main() {

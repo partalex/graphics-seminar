@@ -1,6 +1,8 @@
 #version 410 core
 
+// Uniform variable for time
 uniform float time;
+// Flag to indicate if the current fragment is part of the border
 uniform int isBorder;
 
 out vec4 FragColor;
@@ -14,17 +16,26 @@ float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(RAND_CONST1, RAND_CONST2))) * RAND_CONST3);
 }
 
+// 2D Noise function
 float noise(vec2 st) {
+    // Integer part
     vec2 cell = floor(st);
+    // Fractional part
     vec2 local = fract(st);
 
+    // Four corners in 2D of a tile
     float corner00 = random(cell);
+    // Top-right corner
     float corner10 = random(cell + vec2(1.0, 0.0));
+    // Top-left corner
     float corner01 = random(cell + vec2(0.0, 1.0));
+    // Bottom-right corner
     float corner11 = random(cell + vec2(1.0, 1.0));
 
+    // Smooth interpolation
     vec2 blend = local * local * (3.0 - 2.0 * local);
 
+    // Mix the four corners
     return mix(corner00, corner10, blend.x)
     + (corner01 - corner00) * blend.y * (1.0 - blend.x)
     + (corner11 - corner10) * blend.x * blend.y;
@@ -34,15 +45,17 @@ float noise(vec2 st) {
 float fbm(vec2 st) {
     float value = 0.0;
     float amplitude = 0.5;
-    float frequency = 0.0;
+    float frequency = 1.2;
 
     // Loop of octaves
     for (int i = 0; i < 5; i++) {
         // Accumulate noise with increasing frequency and decreasing amplitude
-        value += amplitude * noise(st);
+        value += amplitude * noise(st * frequency);
         // Increase frequency and decrease amplitude
         st *= 2.0;
         amplitude *= 0.5;
+        // Increase frequency and decrease amplitude
+        frequency *= 1.1;
     }
 
     return value;
